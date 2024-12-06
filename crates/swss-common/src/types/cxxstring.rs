@@ -191,6 +191,13 @@ impl<'de> serde::Deserialize<'de> for CxxString {
             {
                 Ok(CxxString::new(v))
             }
+
+            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                self.visit_bytes(v.as_bytes())
+            }
         }
 
         deserializer.deserialize_bytes(CxxStringVisitor)
