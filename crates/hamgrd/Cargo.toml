@@ -15,3 +15,5 @@ edition.workspace = true
 [dependencies]
 tokio.workspace = true
 swbus-actor = { path = "../swbus-actor" }
+swss-common = { path = "../swss-common" }
+swss-common-bridge = { path = "../swss-common-bridge" }
