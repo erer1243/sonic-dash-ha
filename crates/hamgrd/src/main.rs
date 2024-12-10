@@ -1,7 +1,5 @@
 use std::{sync::Arc, time::Duration};
 use swbus_actor::prelude::*;
-use swss_common::{DbConnector, SubscriberStateTable, ZmqConsumerStateTable, ZmqServer};
-use swss_common_bridge::SwssCommonBridge;
 
 #[tokio::main]
 async fn main() {
@@ -23,11 +21,14 @@ async fn main() {
     let mut swbus_edge = SwbusEdgeRuntime::new("localhost:8000".to_string());
     swbus_edge.start().await.unwrap();
     let mut runtime = ActorRuntime::new(Arc::new(swbus_edge), resend_config);
-    let mut zmqs = ZmqServer::new_async("localhost:8000").await;
 
+    /*
+    let mut zmqs = ZmqServer::new_async("localhost:8000").await;
     // Upstream config programming state tables
     // https://github.com/r12f/SONiC/blob/user/r12f/ha2/doc/smart-switch/high-availability/smart-switch-ha-detailed-design.md#11-upstream-config-programming-path
     {
+        use swss_common::{DbConnector, SubscriberStateTable, ZmqConsumerStateTable, ZmqServer};
+        use swss_common_bridge::SwssCommonBridge;
         const TIMEOUT: u32 = 10000;
 
         let mut config_db = DbConnector::new_named_async("CONFIG_DB", true, TIMEOUT).await;
@@ -97,6 +98,7 @@ async fn main() {
             .spawn(bind_addr_TODO.clone(), dash_ha_scope_config_table_zcst_bridge)
             .await;
     }
+    */
 
     runtime.join().await;
 }
