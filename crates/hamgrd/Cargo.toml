@@ -14,6 +14,22 @@ edition.workspace = true
 
 [dependencies]
 tokio.workspace = true
+serde.workspace = true
 swbus-actor = { path = "../swbus-actor" }
 swss-common = { path = "../swss-common" }
 swss-common-bridge = { path = "../swss-common-bridge" }
+strum.workspace = true
+
+# For macros
+syn = "2.0"
+quote = "1.0"
+proc-macro2 = "1.0"
+
+[[bin]]
+name = "hamgrd"
+
+[lib]
+name = "hamgrd_macro"
+path = "macro/lib.rs"
+proc-macro = true
+test = false

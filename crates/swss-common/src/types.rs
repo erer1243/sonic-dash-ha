@@ -155,6 +155,22 @@ pub struct KeyOpFieldValues {
     pub field_values: FieldValues,
 }
 
+impl KeyOpFieldValues {
+    pub fn new<I, F, V>(key: String, operation: KeyOperation, fvs: I) -> Self
+    where
+        I: IntoIterator<Item = (F, V)>,
+        F: Into<String>,
+        V: Into<CxxString>,
+    {
+        let field_values = fvs.into_iter().map(|(f, v)| (f.into(), v.into())).collect();
+        Self {
+            key,
+            operation,
+            field_values,
+        }
+    }
+}
+
 /// Intended for testing, ordered by key.
 impl PartialOrd for KeyOpFieldValues {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {

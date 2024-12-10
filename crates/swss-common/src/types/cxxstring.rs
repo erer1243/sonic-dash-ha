@@ -191,6 +191,13 @@ impl<'de> serde::Deserialize<'de> for CxxString {
             {
                 Ok(CxxString::new(v))
             }
+
+            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                self.visit_bytes(v.as_bytes())
+            }
         }
 
         deserializer.deserialize_bytes(CxxStringVisitor)
@@ -254,7 +261,7 @@ impl ToOwned for CxxStr {
 
 impl Debug for CxxStr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&self.to_string_lossy())
+        self.to_string_lossy().fmt(f)
     }
 }
 
