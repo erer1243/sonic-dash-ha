@@ -3,7 +3,7 @@ use swbus_actor::prelude::*;
 
 #[tokio::main]
 async fn main() {
-    let mut bind_addr_TODO = ServicePath {
+    let mut bind_addr = ServicePath {
         region_id: "region_a".into(),
         cluster_id: "switch-cluster-a".into(),
         node_id: "10.0.0.1".into(),
@@ -102,3 +102,50 @@ async fn main() {
 
     runtime.join().await;
 }
+
+enum State {
+    Dead,
+    Connecting,
+    Connected,
+    InitializingToActive,
+    InitializingToStandby,
+    Active,
+    Standby,
+    Standalone,
+    SwitchingToStandby,
+    SwitchingToActive,
+}
+
+struct StateMachine {
+    state: State,
+    term: u64,
+}
+
+impl StateMachine {
+    fn new() -> Self {
+        Self {
+            state: State::Dead,
+            term: 0,
+        }
+    }
+}
+
+enum ControlMessage {
+    Connect,
+    RequestVote { term: u64 },
+    HAStateChanged,
+    BulkSyncDone,
+}
+
+/// All signals that hamgrd can receive and react to:
+/// - Launch
+///   - Action: Join HA set, get existing flows from peer, and start taking traffic. [Source](https://github.com/sonic-net/SONiC/blob/master/doc/smart-switch/high-availability/smart-switch-ha-hld.md#81-launch)
+///     
+/// - Message from upstream service/configurer
+///   - Action: ?
+/// - HA control plane control channel failure (swbusd is failing)
+///   - Action: spray network to reestablish data path (how does hamgrd tell swbusd to do this? why is this hamgrd's responsibility and not swbusd's?)
+/// - HA control plane control channel recovers
+///   - Action: ?
+/// -
+mod _doc {}
