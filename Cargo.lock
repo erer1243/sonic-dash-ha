@@ -640,6 +640,8 @@ dependencies = [
 name = "hamgrd"
 version = "0.1.0"
 dependencies = [
+ "serde",
+ "strum",
  "swbus-actor",
  "swss-common",
  "swss-common-bridge",
