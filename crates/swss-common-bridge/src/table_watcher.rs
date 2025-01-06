@@ -1,8 +1,8 @@
-use crate::{payload, table::Table};
+use crate::{oneshot_lazy, payload, table::Table};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use swbus_actor::prelude::*;
-use tokio::sync::{mpsc::Receiver, oneshot};
+use tokio::sync::mpsc;
 
 #[derive(Serialize, Deserialize)]
 pub(crate) enum TableWatcherMessage {
@@ -11,8 +11,8 @@ pub(crate) enum TableWatcherMessage {
 }
 
 pub(crate) struct TableWatcher<T> {
-    outbox: LazyOutbox,
-    tw_msg_rx: Receiver<TableWatcherMessage>,
+    outbox_rx: oneshot_lazy::Receiver<Outbox>,
+    tw_msg_rx: mpsc::Receiver<TableWatcherMessage>,
     table: T,
     subscribers: HashSet<ServicePath>,
 }
@@ -20,11 +20,11 @@ pub(crate) struct TableWatcher<T> {
 impl<T: Table> TableWatcher<T> {
     pub(crate) fn new(
         table: T,
-        outbox_rx: oneshot::Receiver<Outbox>,
-        tw_msg_rx: Receiver<TableWatcherMessage>,
+        outbox_rx: oneshot_lazy::Receiver<Outbox>,
+        tw_msg_rx: mpsc::Receiver<TableWatcherMessage>,
     ) -> Self {
         Self {
-            outbox: LazyOutbox::Waiting(outbox_rx),
+            outbox_rx,
             tw_msg_rx,
             table,
             subscribers: HashSet::new(),
@@ -62,34 +62,13 @@ impl<T: Table> TableWatcher<T> {
         let kfvs = self.table.pops();
         for kfv in kfvs {
             let payload = payload::encode_kfvs(&kfv);
-            let outbox = self.outbox.get().await;
+            let outbox = self.outbox_rx.get().await;
 
             for sub in &self.subscribers {
                 outbox
                     .send(OutgoingMessage::request(sub.clone(), payload.clone()))
                     .await;
             }
-        }
-    }
-}
-
-enum LazyOutbox {
-    Waiting(oneshot::Receiver<Outbox>),
-    Received(Outbox),
-}
-
-impl LazyOutbox {
-    async fn get(&mut self) -> &Outbox {
-        match self {
-            LazyOutbox::Waiting(receiver) => {
-                let outbox = receiver.await.unwrap();
-                *self = LazyOutbox::Received(outbox);
-                let LazyOutbox::Received(outbox) = self else {
-                    unreachable!()
-                };
-                outbox
-            }
-            LazyOutbox::Received(outbox) => outbox,
         }
     }
 }

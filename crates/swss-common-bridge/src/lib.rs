@@ -1,4 +1,6 @@
 pub mod payload;
+
+mod oneshot_lazy;
 mod table;
 mod table_watcher;
 
@@ -6,20 +8,17 @@ use swbus_actor::prelude::*;
 use swss_common::{ConsumerStateTable, SubscriberStateTable, ZmqConsumerStateTable};
 use table::Table;
 use table_watcher::{TableWatcher, TableWatcherMessage};
-use tokio::sync::{
-    mpsc::{channel, Sender},
-    oneshot,
-};
+use tokio::sync::mpsc;
 use tokio_util::task::AbortOnDropHandle;
 
-/// A bridge that converts between Swbus messages and swss tables.
-pub struct SwssCommonBridge {
-    outbox_tx: Option<oneshot::Sender<Outbox>>,
-    tw_msg_tx: Sender<TableWatcherMessage>,
+/// A bridge that converts swss consumer table updates to Swbus messages.
+pub struct ConsumerBridge {
+    outbox_tx: oneshot_lazy::Sender<Outbox>,
+    tw_msg_tx: mpsc::Sender<TableWatcherMessage>,
     _table_watcher_task: AbortOnDropHandle<()>,
 }
 
-impl SwssCommonBridge {
+impl ConsumerBridge {
     pub fn new_consumer_state_table(table: ConsumerStateTable) -> Self {
         Self::new(table)
     }
@@ -33,30 +32,28 @@ impl SwssCommonBridge {
     }
 
     fn new<T: Table + 'static>(table: T) -> Self {
-        let (tw_msg_tx, tw_msg_rx) = channel(1024);
-        let (outbox_tx, outbox_rx) = oneshot::channel();
+        let (tw_msg_tx, tw_msg_rx) = mpsc::channel(1024);
+        let (outbox_tx, outbox_rx) = oneshot_lazy::channel();
         let table_watcher = TableWatcher::new(table, outbox_rx, tw_msg_rx);
         let _table_watcher_task = AbortOnDropHandle::new(tokio::spawn(table_watcher.run()));
         Self {
             tw_msg_tx,
-            outbox_tx: Some(outbox_tx),
+            outbox_tx,
             _table_watcher_task,
         }
     }
 }
 
-impl Actor for SwssCommonBridge {
+impl Actor for ConsumerBridge {
     async fn init(&mut self, outbox: Outbox) {
         self.outbox_tx
-            .take()
-            .unwrap()
             .send(outbox.clone())
             .unwrap_or_else(|_| unreachable!("outbox_tx.send failed"));
     }
 
     async fn handle_message(&mut self, message: IncomingMessage, outbox: Outbox) {
         match &message.body {
-            // Requests are encoded an TableWatcherMessage. Decode it and send it to the TableWatcher
+            // Requests are encoded TableWatcherMessages. Decode it and send it to the TableWatcher
             MessageBody::Request(req) => match payload::decode_table_watcher_message(&req.payload) {
                 Ok(tw_msg) => {
                     self.tw_msg_tx.send(tw_msg).await.expect("TableWatcher task died");
