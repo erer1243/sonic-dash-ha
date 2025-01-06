@@ -1,4 +1,5 @@
 mod config_tables;
+mod state_tables;
 
 use std::{sync::Arc, time::Duration};
 use swbus_actor::prelude::*;
