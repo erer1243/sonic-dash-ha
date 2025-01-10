@@ -33,12 +33,10 @@ impl ActorRuntime {
     /// Spawn an actor that listens for messages on the given service_path
     pub async fn spawn<A: Actor>(&mut self, service_path: ServicePath, actor: A) {
         let swbus_client = Arc::new(SimpleSwbusEdgeClient::new(self.swbus_edge.clone(), service_path).await);
-
         let (inbox_tx, inbox_rx) = channel(1024);
         let (outbox_tx, outbox_rx) = channel(1024);
         let message_bridge = MessageBridge::new(self.resend_config, swbus_client.clone(), inbox_tx, outbox_rx);
         let outbox = Outbox::new(outbox_tx, swbus_client);
-
         self.tasks.spawn(message_bridge.run());
         self.tasks.spawn(actor_main(actor, inbox_rx, outbox));
     }
@@ -50,25 +48,13 @@ impl ActorRuntime {
 }
 
 /// Main loop for an actor task
-async fn actor_main(mut actor: impl Actor, mut inbox_rx: Receiver<InboxMessage>, outbox: Outbox) {
+async fn actor_main(mut actor: impl Actor, mut inbox_rx: Receiver<IncomingMessage>, outbox: Outbox) {
     actor.init(outbox.clone()).await;
 
     // If inbox.recv() returns None, the MessageBridge died
     while let Some(msg) = inbox_rx.recv().await {
-        match msg {
-            InboxMessage::Message(msg) => actor.handle_message(msg, outbox.clone()).await,
-            InboxMessage::MessageFailure { id, destination } => {
-                actor.handle_message_failure(id, destination, outbox.clone()).await
-            }
-        }
+        actor.handle_message(msg, outbox.clone()).await;
     }
-}
-
-/// Messages sent from MessageBridge to an actor.
-/// These messages trigger callbacks from the Actor trait.
-enum InboxMessage {
-    Message(IncomingMessage),
-    MessageFailure { id: MessageId, destination: ServicePath },
 }
 
 /// A bridge between Swbus and an actor, providing middleware (currently just the resend queue).
@@ -79,7 +65,7 @@ pub(crate) struct MessageBridge {
 
     /// Sender for MessageBridge to send incoming messages or message failure signals to its actor.
     /// The receiver exists in actor_main.
-    inbox_tx: Sender<InboxMessage>,
+    inbox_tx: Sender<IncomingMessage>,
 
     /// Receiver for MessageBridge to receive outgoing messages actor.
     /// The sender end exists in Outbox.
@@ -90,7 +76,7 @@ impl MessageBridge {
     fn new(
         resend_queue_config: ResendQueueConfig,
         swbus_client: Arc<SimpleSwbusEdgeClient>,
-        inbox_tx: Sender<InboxMessage>,
+        inbox_tx: Sender<IncomingMessage>,
         outbox_rx: Receiver<SwbusMessage>,
     ) -> Self {
         Self {
@@ -128,7 +114,7 @@ impl MessageBridge {
         if let MessageBody::Response(RequestResponse { request_id, .. }) = &msg.body {
             self.resend_queue.message_acknowledged(*request_id);
         }
-        self.inbox_tx.send(InboxMessage::Message(msg)).await.unwrap();
+        self.inbox_tx.send(msg).await.unwrap();
     }
 
     async fn handle_outgoing_message(&mut self, msg: SwbusMessage) {
@@ -143,8 +129,7 @@ impl MessageBridge {
             match resend {
                 Resend(swbus_msg) => self.swbus_client.send_raw((**swbus_msg).clone()).await.unwrap(),
                 TooManyTries { id, destination } => {
-                    let inbox_message = InboxMessage::MessageFailure { id, destination };
-                    self.inbox_tx.send(inbox_message).await.unwrap();
+                    eprintln!("Message {id} to {destination} was dropped");
                 }
             }
         }

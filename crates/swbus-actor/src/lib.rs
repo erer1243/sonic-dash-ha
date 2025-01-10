@@ -2,10 +2,7 @@ pub mod resend_queue;
 pub mod runtime;
 
 use std::{future::Future, sync::Arc};
-use swbus_edge::{
-    simple_client::*,
-    swbus_proto::swbus::{ServicePath, SwbusMessage},
-};
+use swbus_edge::{simple_client::*, swbus_proto::swbus::SwbusMessage};
 use tokio::sync::mpsc::Sender;
 
 /// Module containing all the imports needed to write an `Actor`.
@@ -25,14 +22,6 @@ pub trait Actor: Send + 'static {
 
     /// A new message came in.
     fn handle_message(&mut self, message: IncomingMessage, outbox: Outbox) -> impl Future<Output = ()> + Send;
-
-    /// The message with this id was never acknowledged by the receiving party.
-    fn handle_message_failure(
-        &mut self,
-        id: MessageId,
-        destination: ServicePath,
-        outbox: Outbox,
-    ) -> impl Future<Output = ()> + Send;
 }
 
 /// An actor's outbox, used to send messages on Swbus.
