@@ -171,6 +171,7 @@ impl OutgoingMessage {
                 request_id: response_to.id,
                 error_code: code as i32,
                 error_message: error_message.into(),
+                response_body: None,
             }),
         }
     }
