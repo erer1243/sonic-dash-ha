@@ -1288,6 +1288,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2b15c43186be67a4fd63bee50d0303afffcef381492ebe2c5d87f324e1b8815c"
 
 [[package]]
+name = "replace_with"
+version = "0.1.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e3a8614ee435691de62bcffcf4a66d91b3594bf1428a5722e79103249a095690"
+
+[[package]]
 name = "rustc-demangle"
 version = "0.1.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1594,6 +1600,19 @@ dependencies = [
  "rand",
  "serde",
  "tokio",
+]
+
+[[package]]
+name = "swss-common-bridge"
+version = "0.1.0"
+dependencies = [
+ "replace_with",
+ "serde",
+ "serde_json",
+ "swbus-actor",
+ "swss-common",
+ "tokio",
+ "tokio-util",
 ]
 
 [[package]]

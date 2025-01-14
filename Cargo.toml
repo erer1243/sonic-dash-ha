@@ -10,7 +10,7 @@ members = [
     "crates/swbus-proto", 
     "crates/swbus-cli",
     "crates/swbus-actor",
-    # "crates/swss-common-bridge",
+    "crates/swss-common-bridge",
 ]
 exclude = []
 

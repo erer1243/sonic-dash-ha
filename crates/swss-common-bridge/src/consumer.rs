@@ -34,8 +34,6 @@ impl<T: ConsumerTable + 'static> Actor for ConsumerTableBridge<T> {
         let msg = OutgoingMessage::error_response(message, SwbusErrorCode::InvalidPayload, err);
         outbox.send(msg).await;
     }
-
-    async fn handle_message_failure(&mut self, _id: MessageId, _addr: ServicePath, _outbox: Outbox) {}
 }
 
 async fn watch_table<T: ConsumerTable>(mut table: T, outbox: Outbox, destination: ServicePath) {
