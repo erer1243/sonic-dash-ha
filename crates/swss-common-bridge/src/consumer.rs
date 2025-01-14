@@ -14,7 +14,7 @@ enum State<T> {
 }
 
 impl<T: ConsumerTable + 'static> ConsumerTableBridge<T> {
-    pub fn new(table: T, destination: ServicePath) -> ConsumerTableBridge<T> {
+    pub fn new(table: T, destination: ServicePath) -> Self {
         ConsumerTableBridge(State::WaitingForInit { table, destination })
     }
 }
