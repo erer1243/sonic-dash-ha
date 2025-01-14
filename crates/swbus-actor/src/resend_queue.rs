@@ -24,7 +24,7 @@ pub(crate) struct ResendQueue {
     config: ResendQueueConfig,
 
     /// The messages that actually need to be resent.
-    unacked_messages: HashMap<MessageId, Arc<Box<SwbusMessage>>>,
+    unacked_messages: HashMap<MessageId, Arc<SwbusMessage>>,
 
     /// A queue of messages that *may* need to be resent.
     /// Messages are ordered earliest at the front to latest at the back.
@@ -45,7 +45,7 @@ impl ResendQueue {
         let header = message.header.as_ref().unwrap();
         let id = header.id;
         let destination = header.destination.as_ref().unwrap().clone();
-        let strong_message = Arc::new(Box::new(message));
+        let strong_message = Arc::new(message);
         let weak_message = Arc::downgrade(&strong_message);
         self.unacked_messages.insert(id, strong_message);
         self.queue.push_back(QueuedMessage {
@@ -109,7 +109,7 @@ impl ResendQueue {
     }
 
     /// Iterator that calls `next_resend` until it returns `None`.
-    pub(crate) fn iter_resend<'a>(&'a mut self) -> impl Iterator<Item = ResendMessage> + 'a {
+    pub(crate) fn iter_resend(&mut self) -> impl Iterator<Item = ResendMessage> + '_ {
         std::iter::from_fn(|| self.next_resend())
     }
 
@@ -122,7 +122,7 @@ impl ResendQueue {
 
 pub(crate) enum ResendMessage {
     /// This message needs to be resent right now
-    Resend(Arc<Box<SwbusMessage>>),
+    Resend(Arc<SwbusMessage>),
 
     /// The message that was in this slot went stale and was dropped
     TooManyTries { id: MessageId, destination: ServicePath },
@@ -134,7 +134,7 @@ struct QueuedMessage {
     ///
     /// If this Weak is broken, that means the message was acked and removed
     /// from ResendQueue::unacked_messages, so we should ignore this entry.
-    message: Weak<Box<SwbusMessage>>,
+    message: Weak<SwbusMessage>,
 
     /// A copy of the destination so it can be given to the actor if the message fails
     destination: ServicePath,
