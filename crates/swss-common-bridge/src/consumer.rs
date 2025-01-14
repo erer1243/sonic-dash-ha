@@ -30,9 +30,14 @@ impl<T: ConsumerTable + 'static> Actor for ConsumerTableBridge<T> {
     }
 
     async fn handle_message(&mut self, message: IncomingMessage, outbox: Outbox) {
-        let err = "ConsumerTableBridge doesn't expect any messages".to_string();
-        let msg = OutgoingMessage::error_response(message, SwbusErrorCode::InvalidPayload, err);
-        outbox.send(msg).await;
+        match message.body {
+            MessageBody::Request(_) => {
+                let err = "ConsumerTableBridge doesn't expect any messages".to_string();
+                let msg = OutgoingMessage::error_response(message, SwbusErrorCode::InvalidPayload, err);
+                outbox.send(msg).await;
+            }
+            MessageBody::Response(_) => { /* ignore all responses */ }
+        }
     }
 }
 
