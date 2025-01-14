@@ -127,7 +127,7 @@ impl MessageBridge {
 
         for resend in self.resend_queue.iter_resend() {
             match resend {
-                Resend(swbus_msg) => self.swbus_client.send_raw((**swbus_msg).clone()).await.unwrap(),
+                Resend(swbus_msg) => self.swbus_client.send_raw((*swbus_msg).clone()).await.unwrap(),
                 TooManyTries { id, destination } => {
                     eprintln!("Message {id} to {destination} was dropped");
                 }
