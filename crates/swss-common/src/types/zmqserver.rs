@@ -41,5 +41,5 @@ unsafe impl Send for ZmqServer {}
 /// Async versions of methods
 #[cfg(feature = "async")]
 impl ZmqServer {
-    async_util::impl_basic_async_method!(new_async <= new(endpoint: &str) -> Self);
+    async_util::impl_basic_async_method!(new_async <= new(endpoint: &str) -> Result<Self>);
 }
