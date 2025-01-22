@@ -17,7 +17,7 @@ impl Actor for ProducerTableBridge {
     async fn handle_message(&mut self, message: IncomingMessage, outbox: Outbox) {
         match &message.body {
             MessageBody::Request(DataRequest { payload }) => {
-                let response = match handle_kfvs(&mut self.table, &payload).await {
+                let response = match handle_kfvs(&mut self.table, payload).await {
                     Ok(()) => OutgoingMessage::ok_response(message),
                     Err((code, msg)) => OutgoingMessage::error_response(message, code, msg),
                 };

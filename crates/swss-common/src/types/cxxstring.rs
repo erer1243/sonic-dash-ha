@@ -178,7 +178,7 @@ impl<'de> serde::Deserialize<'de> for CxxString {
     {
         struct CxxStringVisitor;
 
-        impl<'de> serde::de::Visitor<'de> for CxxStringVisitor {
+        impl serde::de::Visitor<'_> for CxxStringVisitor {
             type Value = CxxString;
 
             fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -193,7 +193,7 @@ impl<'de> serde::Deserialize<'de> for CxxString {
             }
         }
 
-        Ok(deserializer.deserialize_bytes(CxxStringVisitor)?)
+        deserializer.deserialize_bytes(CxxStringVisitor)
     }
 }
 
