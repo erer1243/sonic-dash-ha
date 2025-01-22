@@ -1,5 +1,5 @@
 use swbus_actor::prelude::*;
-use swss_common::{KeyOpFieldValues, KeyOperation, ProducerStateTable};
+use swss_common::{KeyOperation, ProducerStateTable};
 
 pub struct ProducerTableBridge {
     table: ProducerStateTable,
@@ -35,10 +35,16 @@ async fn handle_kfvs(table: &mut ProducerStateTable, payload: &[u8]) -> Result<(
 
     match kfvs.operation {
         KeyOperation::Set => {
-            table.set_async(&kfvs.key, kfvs.field_values).await;
+            table
+                .set_async(&kfvs.key, kfvs.field_values)
+                .await
+                .expect("ProducerStateTable::set threw an exception");
         }
         KeyOperation::Del => {
-            table.del_async(&kfvs.key).await;
+            table
+                .del_async(&kfvs.key)
+                .await
+                .expect("ProducerStateTable::del threw an exception");
         }
     }
 

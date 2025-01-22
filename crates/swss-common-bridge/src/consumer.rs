@@ -68,7 +68,7 @@ macro_rules! impl_consumertable {
             }
 
             fn pops(&mut self) -> Vec<KeyOpFieldValues> {
-                <$t>::pops(self)
+                <$t>::pops(self).expect(concat!(stringify!($t), "::pops threw an exception"))
             }
         }
     };
