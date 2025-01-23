@@ -643,7 +643,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "serde",
- "strum",
  "swbus-actor",
  "swss-common",
  "swss-common-bridge",

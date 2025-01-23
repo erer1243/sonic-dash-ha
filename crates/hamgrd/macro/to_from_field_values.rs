@@ -89,25 +89,3 @@ fn fv_name(field: &Field) -> TokenStream {
     let name = &field.ident;
     quote! { ::std::stringify!(#name) }
 }
-
-// /// Returns the appropriate parser function from tables::support::parse_*
-// /// for the given field type
-// fn parse_func_for_type(ty: &Type) -> TokenStream {
-//     fn is_option_type(path: &Path) -> bool {
-//         path.segments.len() == 1 && path.segments[0].ident == "Option"
-//     }
-
-//     fn is_vec_type(path: &Path) -> bool {
-//         path.segments.len() == 1 && path.segments[0].ident == "Vec"
-//     }
-
-//     match ty {
-//         Type::Path(TypePath { path, .. }) if is_option_type(&path) => {
-//             quote!(crate::tables::support::parse_fv_option)
-//         }
-//         Type::Path(TypePath { path, .. }) if is_vec_type(&path) => {
-//             quote!(crate::tables::support::parse_fv_comma_separated_list)
-//         }
-//         _ => quote!(crate::tables::support::parse_fv),
-//     }
-// }

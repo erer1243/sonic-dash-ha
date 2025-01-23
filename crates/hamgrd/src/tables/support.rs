@@ -3,6 +3,7 @@
 use std::{error::Error, fmt::Display, str::FromStr};
 use swss_common::{CxxString, FieldValues};
 
+/// Convert a struct to/from swss [`FieldValues`] (`HashMap<String, CxxString>`)
 pub trait ToFromFieldValues: Sized {
     fn from_field_values(fvs: &FieldValues) -> Result<Self, FromFieldValuesError>;
     fn to_field_values(&self) -> FieldValues;
@@ -31,7 +32,7 @@ impl Display for FromFieldValuesError {
 
 impl Error for FromFieldValuesError {}
 
-/// Convert a single value to/from an swss field value (`CxxString`/`Option<CxxString>`)
+/// Convert a single value to/from an swss field value (`CxxString`/`Option<&[u8]>`)
 pub trait ToFromFieldValue: Sized {
     fn to_field_value(&self) -> CxxString;
 

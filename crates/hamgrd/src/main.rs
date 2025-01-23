@@ -1,3 +1,4 @@
+mod messages;
 mod tables;
 
 // use std::{sync::Arc, time::Duration};
