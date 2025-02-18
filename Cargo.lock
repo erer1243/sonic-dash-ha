@@ -641,6 +641,7 @@ name = "hamgrd"
 version = "0.1.0"
 dependencies = [
  "serde",
+ "serde_json",
  "swbus-actor",
  "swss-common",
  "swss-common-bridge",
